@@ -39,8 +39,11 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 {
 	char name[128];
 	GetClientName(client, name, sizeof(name));
+
+	int steamid = GetSteamAccountID(client, true);
+
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000%s [U:1:%i]: %s", name, sArgs);
+	Format(message, sizeof(message), "000000000000000000%s [U:1:%i]: %s", name, steamid, sArgs);
 	SocketSend(datsocket, message);
 }
 

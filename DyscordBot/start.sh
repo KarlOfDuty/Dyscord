@@ -1,1 +1,1 @@
-screen -S SCPDiscordBot node DiscordBot.js
+screen -S DyscordBot node DyscordBot.js
