@@ -1,13 +1,13 @@
 {
-  "name": "SCPDiscord",
-  "version": "0.3.1",
-  "description": "SCPDiscord, a Discord - SCP:SL bridge",
+  "name": "Dyscord",
+  "version": "0.0.1",
+  "description": "Dyscord, a Dystopia - Discord bridge",
   "main": "DiscordBot.js",
   "homepage": "https://www.karlofduty.com",
   "license": "GPL-3.0-or-later",
   "private": true,
   "bugs": {
-    "url": "https://github.com/KarlOfDuty/SCPDiscord/issues"
+    "url": "https://github.com/KarlOfDuty/Dyscord/issues"
   },
   "author": {
     "name": "Karl Essinger",
@@ -15,9 +15,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/KarlOfDuty/SCPDiscord"
+    "url": "https://github.com/KarlOfDuty/Dyscord"
   },
   "dependencies": {
-    "discord.js": "^11.4.0"
+    "discord.js": "^11.4.2"
   }
 }
