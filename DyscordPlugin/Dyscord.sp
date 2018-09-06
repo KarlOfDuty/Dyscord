@@ -14,47 +14,65 @@ public Handle datsocket;
 
 public OnPluginStart()
 {
-    PrintToServer("Dyscord plugin activated.");
+	PrintToServer("Dyscord plugin activated.");
 	// create a new tcp socket
 	datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
 
 	// connect the socket
 	SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, "localhost", 8888);
+
+	CreateTimer(5.0, UpdateActivity, _, TIMER_REPEAT);
 }
 
-public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
+public Action UpdateActivity(Handle timer)
 {
-    SocketSend(datsocket, "CONNECTIBOI");
-    return true;
+	int maxPlayers = GetMaxHumanPlayers();
+	int currentPlayers = GetClientCount();
+
+	char message[1000];
+	Format(message, sizeof(message), "botactivity%i / %i", currentPlayers, maxPlayers);
+	SocketSend(datsocket, message);
+	return Plugin_Continue;
 }
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
 {
-    char[] name = new char[100];
-    GetClientName(client, name, 100);
-    SocketSend(datsocket, name + "SayCommand");
-}
-
-public void OnClientSayCommand_Post(int client, const char[] command, const char[] sArgs)
-{
-    char[] name = new char[100];
-    GetClientName(client, name, 100);
-    SocketSend(datsocket, name + "SayCommandPost");
+	char name[128];
+	GetClientName(client, name, sizeof(name));
+	char message[1000];
+	Format(message, sizeof(message), "000000000000000000%s [U:1:%i]: %s", name, sArgs);
+	SocketSend(datsocket, message);
 }
 
 public void OnClientAuthorized(int client, const char[] auth)
 {
-    char[] name = new char[100];
-    GetClientName(client, name, 100);
-    SocketSend(datsocket, name + "AuthBoi");
-    return true;
+	char name[128];
+	GetClientName(client, name, sizeof(name));
+
+	int steamid = GetSteamAccountID(client, true);
+
+	char message[1000];
+	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] joined the game.**", name, steamid);
+	SocketSend(datsocket, message);
+}
+
+public void OnClientDisconnect(int client)
+{
+	char name[128];
+	GetClientName(client, name, sizeof(name));
+	
+	int steamid = GetSteamAccountID(client, true);
+
+	char message[1000];
+	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] left the game.**", name, steamid);
+	SocketSend(datsocket, message);
 }
 
 public OnSocketConnected(Handle:socket, any:arg)
 {
 	// socket is connected, send the http request
 
-	SocketSend(socket, "HELLO GAIS");
+	SocketSend(socket, "000000000000000000**Plugin connected.**");
 }
 
 public OnSocketReceive(Handle:socket, String:receiveData[], const dataSize, any:hFile)

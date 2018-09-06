@@ -21,8 +21,6 @@ listenServer.createServer(function (socket)
     // Messages from the plugin
     socket.on('data', function (data)
     {
-		console.log("Recieved " + data + ".");
-		socket.write("waddup\n");
         if (client == null)
         {
             console.log("Recieved " + data + " but Discord client was null.");
@@ -194,28 +192,28 @@ listenServer.createServer(function (socket)
         const command = args.shift().toLowerCase();
 
         //Add commands here, I only verify permissions and that the command exists here
-        if (command === 'setavatar' && (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false))
-        {
-            var url = args.shift();
-            client.user.setAvatar(url);
-            message.channel.send('Avatar Updated.');
-        }
-        else if (command === 'ban' && (message.member.hasPermission("BAN_MEMBERS") || requirepermission === false))
-        {
-            socket.write("command " + message.content.slice(prefix.length) + "\n");
-        }
-        else if (command === 'unban' && (message.member.hasPermission("BAN_MEMBERS") || requirepermission === false))
-        {
-            socket.write("command " + message.content.slice(prefix.length) + "\n");
-        }
-        else if (command === 'kick' && (message.member.hasPermission("KICK_MEMBERS") || requirepermission === false))
-        {
-            socket.write("command " + message.content.slice(prefix.length) + "\n");
-        }
-        else
-        {
-            socket.write("command " + message.content.slice(prefix.length) + "\n");
-        }
+        //if (command === 'setavatar' && (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false))
+        //{
+        //    var url = args.shift();
+        //    client.user.setAvatar(url);
+        //    message.channel.send('Avatar Updated.');
+        //}
+        //else if (command === 'ban' && (message.member.hasPermission("BAN_MEMBERS") || requirepermission === false))
+        //{
+        //    socket.write("command " + message.content.slice(prefix.length) + "\n");
+        //}
+        //else if (command === 'unban' && (message.member.hasPermission("BAN_MEMBERS") || requirepermission === false))
+        //{
+        //    socket.write("command " + message.content.slice(prefix.length) + "\n");
+        //}
+        //else if (command === 'kick' && (message.member.hasPermission("KICK_MEMBERS") || requirepermission === false))
+        //{
+        //    socket.write("command " + message.content.slice(prefix.length) + "\n");
+        //}
+        //else
+        //{
+        //    socket.write("command " + message.content.slice(prefix.length) + "\n");
+        //}
     });
 
     client.on("error", (e) =>
