@@ -14,6 +14,7 @@ public Handle datsocket;
 
 public OnPluginStart()
 {
+    PrintToServer("Dyscord plugin activated.");
 	// create a new tcp socket
 	datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
 
@@ -24,6 +25,28 @@ public OnPluginStart()
 public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
 {
     SocketSend(datsocket, "CONNECTIBOI");
+    return true;
+}
+
+public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
+{
+    char[] name = new char[100];
+    GetClientName(client, name, 100);
+    SocketSend(datsocket, name + "SayCommand");
+}
+
+public void OnClientSayCommand_Post(int client, const char[] command, const char[] sArgs)
+{
+    char[] name = new char[100];
+    GetClientName(client, name, 100);
+    SocketSend(datsocket, name + "SayCommandPost");
+}
+
+public void OnClientAuthorized(int client, const char[] auth)
+{
+    char[] name = new char[100];
+    GetClientName(client, name, 100);
+    SocketSend(datsocket, name + "AuthBoi");
     return true;
 }
 
