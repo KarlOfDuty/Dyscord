@@ -10,18 +10,21 @@ public Plugin myinfo =
 	url = "https://karlofduty.com"
 };
 
+public Handle datsocket;
+
 public OnPluginStart()
 {
 	// create a new tcp socket
-	new Handle:socket = SocketCreate(SOCKET_TCP, OnSocketError);
+	datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
 
-	// open a file handle for writing the result
-	// new Handle:hFile = OpenFile("dl.htm", "wb");
-
-	// pass the file handle to the callbacks
-	//SocketSetArg(socket, hFile);
 	// connect the socket
-	SocketConnect(socket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, "localhost", 8888);
+	SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, "localhost", 8888);
+}
+
+public bool OnClientConnect(int client, char[] rejectmsg, int maxlen)
+{
+    SocketSend(datsocket, "CONNECTIBOI");
+    return true;
 }
 
 public OnSocketConnected(Handle:socket, any:arg)
@@ -33,18 +36,13 @@ public OnSocketConnected(Handle:socket, any:arg)
 
 public OnSocketReceive(Handle:socket, String:receiveData[], const dataSize, any:hFile)
 {
-	// receive another chunk and write it to <modfolder>/dl.htm
-	// we could strip the http response header here, but for example's sake we'll leave it in
-
-	//WriteFileString(hFile, receiveData, false);
+	ServerCommand(receiveData);
 }
 
 public OnSocketDisconnected(Handle:socket, any:hFile)
 {
 	// Connection: close advises the webserver to close the connection when the transfer is finished
 	// we're done here
-
-	//CloseHandle(hFile);
 	CloseHandle(socket);
 }
 
@@ -53,6 +51,5 @@ public OnSocketError(Handle:socket, const errorType, const errorNum, any:hFile)
 	// a socket error occured
 
 	LogError("socket error %d (errno %d)", errorType, errorNum);
-	//CloseHandle(hFile);
 	CloseHandle(socket);
 }
