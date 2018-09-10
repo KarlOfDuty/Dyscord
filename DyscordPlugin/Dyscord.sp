@@ -10,6 +10,25 @@ public Plugin myinfo =
 	url = "https://karlofduty.com"
 };
 
+////////// Functions ////////////////
+StartsWith(String:sourceString[], int sourceLength, String:searchTermString[], int searchTermLength)
+{
+	if(sourceLength < searchTermLength)
+	{
+		return false;
+	}
+
+	for(int i = 0; i < searchTermLength; i++)
+	{
+		if(sourceString[i] != searchTermString[i])
+		{
+			return false;
+		}
+	}
+	return true;
+}
+/////////////////////////////////////
+
 public Handle datsocket;
 
 public OnPluginStart()
@@ -30,7 +49,7 @@ public Action UpdateActivity(Handle timer)
 	int currentPlayers = GetClientCount();
 
 	char message[1000];
-	Format(message, sizeof(message), "botactivity%i / %i", currentPlayers, maxPlayers);
+	Format(message, sizeof(message), "botactivity%i / %i\n", currentPlayers, maxPlayers);
 	SocketSend(datsocket, message);
 	return Plugin_Continue;
 }
@@ -43,7 +62,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 	int steamid = GetSteamAccountID(client, true);
 
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000%s [U:1:%i]: %s", name, steamid, sArgs);
+	Format(message, sizeof(message), "000000000000000000%s [U:1:%i]: %s\n", name, steamid, sArgs);
 	SocketSend(datsocket, message);
 }
 
@@ -55,7 +74,7 @@ public void OnClientAuthorized(int client, const char[] auth)
 	int steamid = GetSteamAccountID(client, true);
 
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] joined the game.**", name, steamid);
+	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] joined the game.**\n", name, steamid);
 	SocketSend(datsocket, message);
 }
 
@@ -67,7 +86,7 @@ public void OnClientDisconnect(int client)
 	int steamid = GetSteamAccountID(client, true);
 
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] left the game.**", name, steamid);
+	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] left the game.**\n", name, steamid);
 	SocketSend(datsocket, message);
 }
 
@@ -75,12 +94,23 @@ public OnSocketConnected(Handle:socket, any:arg)
 {
 	// socket is connected, send the http request
 
-	SocketSend(socket, "000000000000000000**Plugin connected.**");
+	SocketSend(socket, "000000000000000000**Plugin connected.**\n");
 }
 
 public OnSocketReceive(Handle:socket, String:receiveData[], const dataSize, any:hFile)
 {
-	ServerCommand(receiveData);
+	if(StartsWith(receiveData, strlen(receiveData), "command", 7))
+	{
+		strcopy(receiveData, strlen(receiveData), receiveData[7]);
+		ServerCommand(receiveData);
+		PrintToServer(receiveData);
+	}
+	else if(StartsWith(receiveData, strlen(receiveData), "message", 7))
+	{
+		strcopy(receiveData, strlen(receiveData), receiveData[7]);
+		PrintToChatAll(receiveData);
+		PrintToServer(receiveData);
+	}
 }
 
 public OnSocketDisconnected(Handle:socket, any:hFile)
@@ -96,4 +126,6 @@ public OnSocketError(Handle:socket, const errorType, const errorNum, any:hFile)
 
 	LogError("socket error %d (errno %d)", errorType, errorNum);
 	CloseHandle(socket);
+	datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
+	SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, "localhost", 8888);
 }

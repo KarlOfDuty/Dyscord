@@ -182,38 +182,18 @@ listenServer.createServer(function (socket)
     //Messages from Discord
     client.on('message', message =>
     {
-        //Abort if message does not start with the prefix, if the sender is a bot, if the message is not from the right channel or if it does not contain any letters
-        if (!message.content.startsWith(prefix) || message.author.bot || message.channel.id !== defaultChannel || !/[a-z]/i.test(message.content))
+        if(message.author.bot)
+        {
             return;
+        }
 
-        console.log("Command recieved.");
-        //Cut message into base command and arguments
-        const args = message.content.slice(prefix.length).split(/ +/);
-        const command = args.shift().toLowerCase();
+        if (message.content.startsWith(prefix) && message.channel.id === defaultChannel && /[a-z]/i.test(message.content))
+        {
+            command(socket, message, client);
+            return;
+        }
 
-        //Add commands here, I only verify permissions and that the command exists here
-        //if (command === 'setavatar' && (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false))
-        //{
-        //    var url = args.shift();
-        //    client.user.setAvatar(url);
-        //    message.channel.send('Avatar Updated.');
-        //}
-        //else if (command === 'ban' && (message.member.hasPermission("BAN_MEMBERS") || requirepermission === false))
-        //{
-        //    socket.write("command " + message.content.slice(prefix.length) + "\n");
-        //}
-        //else if (command === 'unban' && (message.member.hasPermission("BAN_MEMBERS") || requirepermission === false))
-        //{
-        //    socket.write("command " + message.content.slice(prefix.length) + "\n");
-        //}
-        //else if (command === 'kick' && (message.member.hasPermission("KICK_MEMBERS") || requirepermission === false))
-        //{
-        //    socket.write("command " + message.content.slice(prefix.length) + "\n");
-        //}
-        //else
-        //{
-        //    socket.write("command " + message.content.slice(prefix.length) + "\n");
-        //}
+        socket.write("message[Discord] " + message.author.username + ": " + message.content + "\n");
     });
 
     client.on("error", (e) =>
@@ -241,6 +221,31 @@ listenServer.createServer(function (socket)
     console.log('Server is listening on port ' + listeningPort);
 }
 
+function command(socket, message, client)
+{
+    //Cut message into base command and arguments
+    const args = message.content.slice(prefix.length).split(/ +/);
+    const command = args.shift().toLowerCase();
+
+    //Add commands here, I only verify permissions and that the command exists here
+    if (command === 'setavatar' && (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false))
+    {
+        var url = args.shift();
+        client.user.setAvatar(url);
+        message.channel.send('Avatar Updated.');
+    }
+    else if (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false)
+    {
+        //Sends the command on to the server.
+        socket.write("command " + message.content.slice(prefix.length) + "\n");
+    }
+    else
+    {
+        message.channel.send('You do not have permission to do that.');
+    }
+}
+
+
 console.log('Connecting to Discord...');
 client.on('ready', () =>
 {
@@ -259,6 +264,11 @@ process.on('exit', function ()
     console.log('Signing out...');
     if (client != null)
     {
+        client.user.setStatus('dnd');
+        client.user.setActivity("for server startup.",
+        {
+            type: "WATCHING"
+        });
         client.destroy();
     }
 });
@@ -268,6 +278,11 @@ process.on('SIGINT', function ()
     console.log('Signing out...');
     if (client != null)
     {
+        client.user.setStatus('dnd');
+        client.user.setActivity("for server startup.",
+        {
+            type: "WATCHING"
+        });
         client.destroy();
     }
 });
@@ -278,6 +293,11 @@ process.on('SIGUSR1', function ()
     console.log('Signing out...');
     if (client != null)
     {
+        client.user.setStatus('dnd');
+        client.user.setActivity("for server startup.",
+        {
+            type: "WATCHING"
+        });
         client.destroy();
     }
 });
@@ -298,6 +318,11 @@ process.on('SIGHUP', function ()
     console.log('Signing out...');
     if (client != null)
     {
+        client.user.setStatus('dnd');
+        client.user.setActivity("for server startup.",
+        {
+            type: "WATCHING"
+        });
         client.destroy();
     }
 });
