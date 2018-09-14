@@ -254,7 +254,11 @@ public void OnClientDisconnect(int client)
 	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] left the game.**\0", name, steamid);
 	SocketSend(datsocket, message);
 }
-
+public OnPluginEnd()
+{
+	SocketDisconnect(datsocket);
+	CloseHandle(datsocket);
+}
 ///////////////////////////////////////
 //                                   //
 //          Socket events            //
@@ -280,7 +284,7 @@ public OnSocketConnected(Handle:socket, any:arg)
 {
 	// socket is connected, send the http request
 
-	SocketSend(socket, "000000000000000000```diff\n+ Plugin connected.```\0");
+	SocketSend(socket, "000000000000000000```diff\n+ Dystopia connected.```\0");
 }
 
 public OnSocketReceive(Handle:socket, String:receiveData[], const dataSize, any:hFile)
