@@ -100,6 +100,8 @@ public OnPluginStart()
 	HookEvent("player_death", OnPlayerDeath);
 	//HookEvent("player_class", OnPlayerClass);
 	HookEvent("player_team", OnPlayerTeam);
+	HookEvent("dys_changemap", OnChangemap);
+	HookEvent("objective", OnObjective);
 
 	// Register command
 	RegAdminCmd("discord_reconnect", CommandReconnect, ADMFLAG_CHAT);
@@ -146,7 +148,7 @@ public void OnPlayerClass(Event event, const char[] name, bool dontBroadcast)
 	GetClientName(playerClient, playerName, sizeof(playerName));
 
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] switched class to %s.\0", playerName, playerSteamID, class);
+	Format(message, sizeof(message), "000000000000000000%s [U:1:%i] switched class to %s.\0", playerName, playerSteamID, class);
 	SocketSend(datsocket, message);
 }
 
@@ -166,7 +168,7 @@ public void OnPlayerTeam(Event event, const char[] name, bool dontBroadcast)
 	GetClientName(playerClient, playerName, sizeof(playerName));
 
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] switched team from %s to %s.\0", playerName, playerSteamID, oldTeam, team);
+	Format(message, sizeof(message), "000000000000000000%s [U:1:%i] switched team from %s to %s.\0", playerName, playerSteamID, oldTeam, team);
 	SocketSend(datsocket, message);
 }
 
@@ -177,12 +179,28 @@ public void OnRoundRestart(Event event, const char[] name, bool dontBroadcast)
 
 public void OnChangemap(Event event, const char[] name, bool dontBroadcast)
 {
+	char map[64];
+	event.GetString("newmap", map, sizeof(map));
 
+	char message[1000];
+	Format(message, sizeof(message), "000000000000000000**Map has changed to %s**\0", map);
+	SocketSend(datsocket, message);
 }
 
 public void OnObjective(Event event, const char[] name, bool dontBroadcast)
 {
+	int playerClient = GetClientOfUserId(event.GetInt("userid"));
+	int playerSteamID = GetSteamAccountID(playerClient, true);
 
+	char playerName[64];
+	GetClientName(playerClient, playerName, sizeof(playerName));
+
+	char objective[64];
+	event.GetString("objective", objective, sizeof(objective));
+
+	char message[1000];
+	Format(message, sizeof(message), "000000000000000000**The objcetive \"%s\" has been captured by %s [U:1:%i]**\0", objective, playerName, playerSteamID);
+	SocketSend(datsocket, message);
 }
 
 ///////////////////////////////////////
