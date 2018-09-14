@@ -10,6 +10,8 @@ const client = new Discord.Client({ autoReconnect: true });
 
 var messageQueue = JSON.parse('{}');
 
+var connectedToDiscord = false;
+
 console.log('Binding TCP port...');
 var listenServer = require('net');
 listenServer.createServer(function (socket)
@@ -24,6 +26,12 @@ listenServer.createServer(function (socket)
         if (client == null)
         {
             console.log("Recieved " + data + " but Discord client was null.");
+            return;
+        }
+
+        if (!connectedToDiscord)
+        {
+            console.log("Recieved " + data + " but was not connected to Discord yet.");
             return;
         }
         var messages = data.split('\u0000');
