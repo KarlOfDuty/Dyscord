@@ -13,6 +13,7 @@ public Plugin myinfo =
 
 public Handle datsocket;
 public bool disconnected = false;
+public bool firstTimeSteup = true;
 
 ///////////////////////////////////////
 //                                   //
@@ -68,7 +69,7 @@ public Action UpdateActivity(Handle timer)
 
 	char message[1000];
 	Format(message, sizeof(message), "botactivity%i / %i\0", currentPlayers, maxPlayers);
-	SocketSend(datsocket, message);
+	SocketSend(datsocket, message, sizeof(message));
 	disconnected = false;
 	return Plugin_Continue;
 }
@@ -83,30 +84,40 @@ public OnPluginStart()
 	PrintToServer("Dyscord plugin activated.");
 
 	// Registering ConVars
-	convar_ip = CreateConVar("discord_bot_ip", "127.0.0.1", "The ip of the bot application.", FCVAR_PROTECTED);
-	convar_port = CreateConVar("discord_bot_port", "8888", "The ip of the bot application.", FCVAR_PROTECTED);
-
-	// Connecting TCP socket
-	datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
-
-	char ip[64];
-	convar_ip.GetString(ip, sizeof(ip));
-	SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_port.IntValue);
-
-	// Set automated events
-	CreateTimer(5.0, UpdateActivity, _, TIMER_REPEAT);
-
-	// Hook game events
-	HookEvent("player_death", OnPlayerDeath);
-	//HookEvent("player_class", OnPlayerClass);
-	HookEvent("player_team", OnPlayerTeam);
-	HookEvent("dys_changemap", OnChangemap);
-	HookEvent("objective", OnObjective);
-
-	// Register command
-	RegAdminCmd("discord_reconnect", CommandReconnect, ADMFLAG_CHAT);
+	convar_ip = CreateConVar("discord_bot_ip", "127.0.0.1", "The ip of the bot application.");
+	convar_port = CreateConVar("discord_bot_port", "8888", "The ip of the bot application.");
+	AutoExecConfig(true, "dyscord");
 }
 
+public OnConfigsExecuted()
+{
+	if(firstTimeSteup)
+	{
+		convar_ip = FindConVar("discord_bot_ip");
+		convar_port = FindConVar("discord_bot_port");
+		// Connecting TCP socket
+		datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
+
+		char ip[64];
+		convar_ip.GetString(ip, sizeof(ip));
+		SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_port.IntValue);
+		PrintToServer("Connecting to bot. IP: %s Port: %i", ip, convar_port.IntValue);
+
+		// Set automated events
+		CreateTimer(5.0, UpdateActivity, _, TIMER_REPEAT);
+
+		// Hook game events
+		HookEvent("player_death", OnPlayerDeath);
+		//HookEvent("player_class", OnPlayerClass);
+		HookEvent("player_team", OnPlayerTeam);
+		HookEvent("dys_changemap", OnChangemap);
+		HookEvent("objective", OnObjective);
+
+		// Register command
+		RegAdminCmd("discord_reconnect", CommandReconnect, ADMFLAG_CHAT);
+		firstTimeSteup = false;
+	}
+}
 ///////////////////////////////////////
 //                                   //
 //          Game events              //
@@ -128,11 +139,22 @@ public void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	GetClientName(playerClient, playerName, sizeof(playerName));
 
 	char attackerName[64];
-	GetClientName(attackerClient, playerName, sizeof(playerName));
+	GetClientName(attackerClient, attackerName, sizeof(attackerName));
 
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000%s [U:1:%i] was killed by %s [U:1:%i].\0", playerName, playerSteamID, attackerName, attackerSteamID);
-	SocketSend(datsocket, message);
+	if(playerSteamID == attackerSteamID)
+	{
+		if(StrEqual(weapon, "player", false))
+		{
+			weapon = "K";
+		}
+		Format(message, sizeof(message), "000000000000000000%s [U:1:%i] killed themselves using %s.\0", playerName, playerSteamID, weapon);
+	}
+	else
+	{
+		Format(message, sizeof(message), "000000000000000000%s [U:1:%i] was killed by %s [U:1:%i] using %s.\0", playerName, playerSteamID, attackerName, attackerSteamID, weapon);
+	}
+	SocketSend(datsocket, message, sizeof(message));
 }
 
 public void OnPlayerClass(Event event, const char[] name, bool dontBroadcast)
@@ -149,7 +171,7 @@ public void OnPlayerClass(Event event, const char[] name, bool dontBroadcast)
 
 	char message[1000];
 	Format(message, sizeof(message), "000000000000000000%s [U:1:%i] switched class to %s.\0", playerName, playerSteamID, class);
-	SocketSend(datsocket, message);
+	SocketSend(datsocket, message, sizeof(message));
 }
 
 public void OnPlayerTeam(Event event, const char[] name, bool dontBroadcast)
@@ -162,6 +184,11 @@ public void OnPlayerTeam(Event event, const char[] name, bool dontBroadcast)
 	char oldTeam[64];
 	GetTeamName(event.GetInt("oldteam"), oldTeam, sizeof(oldTeam));
 
+	if(StrEqual(oldTeam, "Unassigned", false))
+	{
+		return
+	}
+
 	int playerSteamID = GetSteamAccountID(playerClient, true);
 
 	char playerName[64];
@@ -169,7 +196,7 @@ public void OnPlayerTeam(Event event, const char[] name, bool dontBroadcast)
 
 	char message[1000];
 	Format(message, sizeof(message), "000000000000000000%s [U:1:%i] switched team from %s to %s.\0", playerName, playerSteamID, oldTeam, team);
-	SocketSend(datsocket, message);
+	SocketSend(datsocket, message, sizeof(message));
 }
 
 public void OnRoundRestart(Event event, const char[] name, bool dontBroadcast)
@@ -184,7 +211,7 @@ public void OnChangemap(Event event, const char[] name, bool dontBroadcast)
 
 	char message[1000];
 	Format(message, sizeof(message), "000000000000000000**Map has changed to %s**\0", map);
-	SocketSend(datsocket, message);
+	SocketSend(datsocket, message, sizeof(message));
 }
 
 public void OnObjective(Event event, const char[] name, bool dontBroadcast)
@@ -200,7 +227,7 @@ public void OnObjective(Event event, const char[] name, bool dontBroadcast)
 
 	char message[1000];
 	Format(message, sizeof(message), "000000000000000000**The objcetive \"%s\" has been captured by %s [U:1:%i]**\0", objective, playerName, playerSteamID);
-	SocketSend(datsocket, message);
+	SocketSend(datsocket, message, sizeof(message));
 }
 
 ///////////////////////////////////////
@@ -217,7 +244,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 
 	char message[1000];
 	Format(message, sizeof(message), "000000000000000000%s [U:1:%i]: %s\0", name, steamid, sArgs);
-	SocketSend(datsocket, message);
+	SocketSend(datsocket, message, sizeof(message));
 }
 
 public void OnClientAuthorized(int client, const char[] auth)
@@ -229,7 +256,7 @@ public void OnClientAuthorized(int client, const char[] auth)
 
 	char message[1000];
 	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] joined the game.**\0", name, steamid);
-	SocketSend(datsocket, message);
+	SocketSend(datsocket, message, sizeof(message));
 }
 
 public void OnClientDisconnect(int client)
@@ -241,9 +268,13 @@ public void OnClientDisconnect(int client)
 
 	char message[1000];
 	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] left the game.**\0", name, steamid);
-	SocketSend(datsocket, message);
+	SocketSend(datsocket, message, sizeof(message));
 }
-
+public OnPluginEnd()
+{
+	SocketDisconnect(datsocket);
+	CloseHandle(datsocket);
+}
 ///////////////////////////////////////
 //                                   //
 //          Socket events            //
@@ -268,8 +299,8 @@ public Action CommandReconnect(int client, int args)
 public OnSocketConnected(Handle:socket, any:arg)
 {
 	// socket is connected, send the http request
-
-	SocketSend(socket, "000000000000000000**Plugin connected.**\0");
+	char message[64] = "000000000000000000```diff\n+ Dystopia connected.```\0";
+	SocketSend(socket, message, sizeof(message));
 }
 
 public OnSocketReceive(Handle:socket, String:receiveData[], const dataSize, any:hFile)
