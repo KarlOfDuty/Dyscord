@@ -10,6 +10,8 @@ const client = new Discord.Client({ autoReconnect: true });
 
 var messageQueue = JSON.parse('{}');
 
+var connectedToDiscord = false;
+
 console.log('Binding TCP port...');
 var listenServer = require('net');
 listenServer.createServer(function (socket)
@@ -24,6 +26,12 @@ listenServer.createServer(function (socket)
         if (client == null)
         {
             console.log("Recieved " + data + " but Discord client was null.");
+            return;
+        }
+
+        if (!connectedToDiscord)
+        {
+            console.log("Recieved " + data + " but was not connected to Discord yet.");
             return;
         }
         var messages = data.split('\u0000');
@@ -156,11 +164,11 @@ listenServer.createServer(function (socket)
     {
         if (data.message === "read ECONNRESET")
         {
-            console.log('Plugin connection lost.');
+            console.log("Plugin connection lost.");
             var verifiedChannel = client.channels.get(defaultChannel);
             if (verifiedChannel != null)
             {
-                verifiedChannel.send("Plugin connection lost.");
+                verifiedChannel.send("```diff\n- Dystopia connection lost.```");
                 client.user.setStatus('dnd');
                 client.user.setActivity("for server startup.",
                 {
@@ -182,18 +190,19 @@ listenServer.createServer(function (socket)
     //Messages from Discord
     client.on('message', message =>
     {
-        if(message.author.bot)
+        if(message.author.bot || message.channel.id !== defaultChannel || !/[a-z]/i.test(message.content))
         {
             return;
         }
 
-        if (message.content.startsWith(prefix) && message.channel.id === defaultChannel && /[a-z]/i.test(message.content))
+        if (message.content.startsWith(prefix))
         {
             command(socket, message, client);
-            return;
         }
-
-        socket.write("message[Discord] " + message.author.username + ": " + message.content + "\n");
+        else
+        {
+            socket.write("message[Discord] " + message.author.username + ": " + message.content + "\n");
+        }
     });
 
     client.on("error", (e) =>
@@ -245,85 +254,76 @@ function command(socket, message, client)
     }
 }
 
-
-console.log('Connecting to Discord...');
-client.on('ready', () =>
+console.log("Connecting to Discord...");
+client.on("ready", () =>
 {
-    console.log('Discord connection established.');
-    client.channels.get(defaultChannel).send("Bot Online.");
-    client.user.setStatus('dnd');
+    console.log("Discord connection established.");
+    client.channels.get(defaultChannel).send("```diff\n+ Bot Online.```");
+    client.user.setStatus("dnd");
     client.user.setActivity("for server startup.",
     {
         type: "WATCHING"
     });
+    connectedToDiscord = true;
 });
 
-process.on('exit', function ()
+process.on("exit", function ()
 {
-    client.send("Bot shutting down...");
-    console.log('Signing out...');
-    if (client != null)
+    client.channels.get(defaultChannel).send("```diff\n- Bot shutting down...```");
+    console.log("Signing out...");
+    client.user.setStatus("dnd");
+    client.user.setActivity("for server startup.",
     {
-        client.user.setStatus('dnd');
-        client.user.setActivity("for server startup.",
-        {
-            type: "WATCHING"
-        });
-        client.destroy();
-    }
+        type: "WATCHING"
+    });
+    client.destroy();
 });
-process.on('SIGINT', function ()
+process.on("SIGINT", function ()
 {
-    client.send("Bot shutting down...");
-    console.log('Signing out...');
-    if (client != null)
+    client.channels.get(defaultChannel).send("```diff\n- Bot shutting down...```");
+    console.log("Signing out...");
+    client.user.setStatus("dnd");
+    client.user.setActivity("for server startup.",
     {
-        client.user.setStatus('dnd');
-        client.user.setActivity("for server startup.",
-        {
-            type: "WATCHING"
-        });
-        client.destroy();
-    }
+        type: "WATCHING"
+    });
+    client.destroy();
 });
 
-process.on('SIGUSR1', function ()
+process.on("SIGUSR1", function ()
 {
-    client.send("Bot shutting down...");
-    console.log('Signing out...');
-    if (client != null)
+    client.channels.get(defaultChannel).send("```diff\n- Bot shutting down...```");
+    console.log("Signing out...");
+    client.user.setStatus("dnd");
+    client.user.setActivity("for server startup.",
     {
-        client.user.setStatus('dnd');
-        client.user.setActivity("for server startup.",
-        {
-            type: "WATCHING"
-        });
-        client.destroy();
-    }
+        type: "WATCHING"
+    });
+    client.destroy();
 });
 
-process.on('SIGUSR2', function ()
+process.on("SIGUSR2", function ()
 {
-    client.send("Bot shutting down...");
-    console.log('Signing out...');
-    if (client != null)
+    client.channels.get(defaultChannel).send("```diff\n- Bot shutting down...```");
+    console.log("Signing out...");
+    client.user.setStatus("dnd");
+    client.user.setActivity("for server startup.",
     {
-        client.destroy();
-    }
+        type: "WATCHING"
+    });
+    client.destroy();
 });
 
-process.on('SIGHUP', function ()
+process.on("SIGHUP", function ()
 {
-    client.send("Bot shutting down...");
-    console.log('Signing out...');
-    if (client != null)
+    client.channels.get(defaultChannel).send("```diff\n- Bot shutting down...```");
+    console.log("Signing out...");
+    client.user.setStatus("dnd");
+    client.user.setActivity("for server startup.",
     {
-        client.user.setStatus('dnd');
-        client.user.setActivity("for server startup.",
-        {
-            type: "WATCHING"
-        });
-        client.destroy();
-    }
+        type: "WATCHING"
+    });
+    client.destroy();
 });
+
 client.login(token);

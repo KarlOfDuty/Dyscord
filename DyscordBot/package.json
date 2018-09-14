@@ -1,6 +1,6 @@
 {
   "name": "Dyscord",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Dyscord, a Dystopia - Discord bridge",
   "main": "DiscordBot.js",
   "homepage": "https://www.karlofduty.com",
