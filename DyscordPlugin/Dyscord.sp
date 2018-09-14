@@ -13,6 +13,7 @@ public Plugin myinfo =
 
 public Handle datsocket;
 public bool disconnected = false;
+public bool firstTimeSteup = true;
 
 ///////////////////////////////////////
 //                                   //
@@ -83,30 +84,40 @@ public OnPluginStart()
 	PrintToServer("Dyscord plugin activated.");
 
 	// Registering ConVars
-	convar_ip = CreateConVar("discord_bot_ip", "127.0.0.1", "The ip of the bot application.", FCVAR_PROTECTED);
-	convar_port = CreateConVar("discord_bot_port", "8888", "The ip of the bot application.", FCVAR_PROTECTED);
-
-	// Connecting TCP socket
-	datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
-
-	char ip[64];
-	convar_ip.GetString(ip, sizeof(ip));
-	SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_port.IntValue);
-
-	// Set automated events
-	CreateTimer(5.0, UpdateActivity, _, TIMER_REPEAT);
-
-	// Hook game events
-	HookEvent("player_death", OnPlayerDeath);
-	//HookEvent("player_class", OnPlayerClass);
-	HookEvent("player_team", OnPlayerTeam);
-	HookEvent("dys_changemap", OnChangemap);
-	HookEvent("objective", OnObjective);
-
-	// Register command
-	RegAdminCmd("discord_reconnect", CommandReconnect, ADMFLAG_CHAT);
+	convar_ip = CreateConVar("discord_bot_ip", "127.0.0.1", "The ip of the bot application.");
+	convar_port = CreateConVar("discord_bot_port", "8888", "The ip of the bot application.");
+	AutoExecConfig(true, "dyscord");
 }
 
+public OnConfigsExecuted()
+{
+	if(firstTimeSteup)
+	{
+		convar_ip = FindConVar("discord_bot_ip");
+		convar_port = FindConVar("discord_bot_port");
+		// Connecting TCP socket
+		datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
+
+		char ip[64];
+		convar_ip.GetString(ip, sizeof(ip));
+		SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_port.IntValue);
+		PrintToServer("Connecting to bot. IP: %s Port: %i", ip, convar_port.IntValue);
+
+		// Set automated events
+		CreateTimer(5.0, UpdateActivity, _, TIMER_REPEAT);
+
+		// Hook game events
+		HookEvent("player_death", OnPlayerDeath);
+		//HookEvent("player_class", OnPlayerClass);
+		HookEvent("player_team", OnPlayerTeam);
+		HookEvent("dys_changemap", OnChangemap);
+		HookEvent("objective", OnObjective);
+
+		// Register command
+		RegAdminCmd("discord_reconnect", CommandReconnect, ADMFLAG_CHAT);
+		firstTimeSteup = false;
+	}
+}
 ///////////////////////////////////////
 //                                   //
 //          Game events              //
@@ -269,7 +280,7 @@ public OnSocketConnected(Handle:socket, any:arg)
 {
 	// socket is connected, send the http request
 
-	SocketSend(socket, "000000000000000000**Plugin connected.**\0");
+	SocketSend(socket, "000000000000000000```diff\n+ Plugin connected.```\0");
 }
 
 public OnSocketReceive(Handle:socket, String:receiveData[], const dataSize, any:hFile)
