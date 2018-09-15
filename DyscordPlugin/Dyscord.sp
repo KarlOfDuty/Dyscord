@@ -184,7 +184,7 @@ public void OnPlayerTeam(Event event, const char[] name, bool dontBroadcast)
 	char oldTeam[64];
 	GetTeamName(event.GetInt("oldteam"), oldTeam, sizeof(oldTeam));
 
-	if(StrEqual(oldTeam, "Unassigned", false))
+	if(StrEqual(oldTeam, "Unassigned", false) || StrEqual(team, "Unassigned", false))
 	{
 		return
 	}
@@ -195,7 +195,18 @@ public void OnPlayerTeam(Event event, const char[] name, bool dontBroadcast)
 	GetClientName(playerClient, playerName, sizeof(playerName));
 
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000%s [U:1:%i] switched team from %s to %s.\0", playerName, playerSteamID, oldTeam, team);
+	if(StrEqual(oldTeam, "Spectator", false))
+	{
+		Format(message, sizeof(message), "000000000000000000%s [U:1:%i] joined team %s.\0", playerName, playerSteamID, team);
+	}
+	else if(StrEqual(team, "Spectator", false))
+	{
+		Format(message, sizeof(message), "000000000000000000%s [U:1:%i] became a spectator.\0", playerName, playerSteamID);
+	}
+	else
+	{
+		Format(message, sizeof(message), "000000000000000000%s [U:1:%i] switched team to %s.\0", playerName, playerSteamID, team);
+	}
 	SocketSend(datsocket, message, sizeof(message));
 }
 
