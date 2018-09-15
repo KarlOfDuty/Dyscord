@@ -29,7 +29,7 @@ ConVar:convar_port;
 //         Utility functions         //
 //                                   //
 ///////////////////////////////////////
-public bool StartsWith(String:sourceString[], int sourceLength, String:searchTermString[], int searchTermLength)
+bool StartsWith(String:sourceString[], int sourceLength, String:searchTermString[], int searchTermLength)
 {
 	if(sourceLength < searchTermLength)
 	{
@@ -46,6 +46,63 @@ public bool StartsWith(String:sourceString[], int sourceLength, String:searchTer
 	return true;
 }
 
+char[] WeaponTagToName(const char[] tag)
+{
+	char output[64];
+	if(StrEqual("MachPistol", tag, false))
+	{
+		output = "Machine Pistol";
+	}
+	else if(StrEqual("Player", tag, false))
+	{
+		output = "K";
+	}
+	else if(StrEqual("MK808", tag, false))
+	{
+		output = "MK808 Rifle";
+	}
+	else if(StrEqual("Assault", tag, false))
+	{
+		output = "Assault Rifle";
+	}
+	else if(StrEqual("BoltGun", tag, false))
+	{
+		output = "Boltgun";
+	}
+	else if(StrEqual("RocketLauncher", tag, false))
+	{
+		output = "Rocket Launcher";
+	}
+	else if(StrEqual("SpiderGrenade", tag, false))
+	{
+		output = "Spider Grenade";
+	}
+	else if(StrEqual("SmartLocks", tag, false))
+	{
+		output = "SmartLock Pistols";
+	}
+	else if(StrEqual("GrenLauncher", tag, false))
+	{
+		output = "Grenade Launcher";
+	}
+	else if(StrEqual("Tesla", tag, false))
+	{
+		output = "Tesla Rifle";
+	}
+	else if(StrEqual("LaserRifle", tag, false))
+	{
+		output = "Laser Rifle";
+	}
+	else if(StrEqual("Ion", tag, false))
+	{
+		output = "Ion Cannon";
+	}
+	else
+	{
+		strcopy(output, sizeof(output), tag);
+	}
+	return output;
+}
 
 ///////////////////////////////////////
 //                                   //
@@ -101,7 +158,7 @@ public OnConfigsExecuted()
 		char ip[64];
 		convar_ip.GetString(ip, sizeof(ip));
 		SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_port.IntValue);
-		PrintToServer("Connecting to bot. IP: %s Port: %i", ip, convar_port.IntValue);
+		PrintToServer("Connecting to Discord Bot. IP: %s Port: %i", ip, convar_port.IntValue);
 
 		// Set automated events
 		CreateTimer(5.0, UpdateActivity, _, TIMER_REPEAT);
@@ -144,15 +201,11 @@ public void OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	char message[1000];
 	if(playerSteamID == attackerSteamID)
 	{
-		if(StrEqual(weapon, "player", false))
-		{
-			weapon = "K";
-		}
-		Format(message, sizeof(message), "000000000000000000%s [U:1:%i] killed themselves using %s.\0", playerName, playerSteamID, weapon);
+		Format(message, sizeof(message), "000000000000000000%s [U:1:%i] killed themselves using %s.\0", playerName, playerSteamID, WeaponTagToName(weapon));
 	}
 	else
 	{
-		Format(message, sizeof(message), "000000000000000000%s [U:1:%i] was killed by %s [U:1:%i] using %s.\0", playerName, playerSteamID, attackerName, attackerSteamID, weapon);
+		Format(message, sizeof(message), "000000000000000000%s [U:1:%i] was killed by %s [U:1:%i] using %s.\0", playerName, playerSteamID, attackerName, attackerSteamID, WeaponTagToName(weapon));
 	}
 	SocketSend(datsocket, message, sizeof(message));
 }
