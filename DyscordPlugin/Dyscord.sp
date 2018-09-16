@@ -7,7 +7,7 @@ public Plugin myinfo =
 	name = "Dyscord",
 	author = "KarlOfDuty",
 	description = "This plugin bridges a Discord chat and the Dystopia in-game chat.",
-	version = "0.0.2",
+	version = "0.1.0",
 	url = "https://karlofduty.com"
 };
 
