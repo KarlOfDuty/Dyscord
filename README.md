@@ -1,5 +1,5 @@
 # Dyscord
-A SourceMod plugin to bridge [Dystopia](https://store.steampowered.com/app/17580/Dystopia/) and [Discord](https://discordapp.com/).
+A SourceMod plugin to bridge [Dystopia](https://store.steampowered.com/app/17580/Dystopia/) and [Discord](https://discordapp.com/). The release includes a SourceMod plugin with the required extension files and a Node.js bot application which is run sepeerately from the game server. There is currently no working Discord API that works with Dystopia which is why the bot is seperated into it's own application.
 
 ## Features
 
