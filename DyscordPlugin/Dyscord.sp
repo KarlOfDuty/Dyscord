@@ -169,6 +169,7 @@ public OnConfigsExecuted()
 		HookEvent("player_team", OnPlayerTeam);
 		HookEvent("dys_changemap", OnChangemap);
 		HookEvent("objective", OnObjective);
+		HookEvent("round_restart", OnRoundRestart);
 
 		// Register command
 		RegAdminCmd("discord_reconnect", CommandReconnect, ADMFLAG_CHAT);
@@ -265,7 +266,12 @@ public void OnPlayerTeam(Event event, const char[] name, bool dontBroadcast)
 
 public void OnRoundRestart(Event event, const char[] name, bool dontBroadcast)
 {
+	char team[64];
+	GetTeamName(event.GetInt("winner"), team, sizeof(team));
 
+	char message[1000];
+	Format(message, sizeof(message), "000000000000000000**%s won the game.**\0", team);
+	SocketSend(datsocket, message, sizeof(message));
 }
 
 public void OnChangemap(Event event, const char[] name, bool dontBroadcast)
