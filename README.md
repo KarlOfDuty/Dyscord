@@ -17,5 +17,5 @@ Shows server information in the channel topic.
 
 ## Installation
 
-Check out the setup guides [heere](https://github.com/KarlOfDuty/Dyscord/wiki).
+Check out the setup guides [here](https://github.com/KarlOfDuty/Dyscord/wiki).
 
