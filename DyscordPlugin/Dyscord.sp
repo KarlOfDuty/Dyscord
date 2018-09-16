@@ -21,8 +21,17 @@ public bool firstTimeSteup = true;
 //                                   //
 ///////////////////////////////////////
 
-ConVar:convar_ip;
-ConVar:convar_port;
+ConVar:convar_hostname;
+char serverName[128];
+ConVar:convar_server_ip;
+char serverIP[32];
+ConVar:convar_server_port;
+char serverPort[32];
+ConVar:convar_bot_ip;
+ConVar:convar_bot_port;
+ConVar:convar_announcement;
+ConVar:convar_announcement_link;
+ConVar:convar_announcement_rate;
 
 ///////////////////////////////////////
 //                                   //
@@ -104,31 +113,59 @@ char[] WeaponTagToName(const char[] tag)
 	return output;
 }
 
+char[] GetUptime()
+{
+	char output[64];
+
+	int theTime = RoundToZero(GetGameTime());
+	int days = theTime / 86400;
+	int hours = (theTime - (days * 86400)) / 3600;
+	int minutes = (theTime - (days * 86400) - (hours * 3600)) / 60;
+
+	Format(output, sizeof(output), "%id %ih %im\0", days, hours, minutes);
+	return output;
+}
 ///////////////////////////////////////
 //                                   //
 //         Repeating events          //
 //                                   //
 ///////////////////////////////////////
-public Action UpdateActivity(Handle timer)
+public Action UpdateStatus(Handle timer)
 {
 	if(disconnected)
 	{
 		datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
 		char ip[64];
-		convar_ip.GetString(ip, sizeof(ip));
-		SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_port.IntValue);
+		convar_bot_ip.GetString(ip, sizeof(ip));
+		SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_bot_port.IntValue);
 		disconnected = false;
 		return Plugin_Continue;
 	}
 	disconnected = true;
+
 	int maxPlayers = GetMaxHumanPlayers();
 	int currentPlayers = GetClientCount();
 
-	char message[1000];
-	Format(message, sizeof(message), "botactivity%i / %i\0", currentPlayers, maxPlayers);
-	SocketSend(datsocket, message, sizeof(message));
+	char activity[64];
+	Format(activity, sizeof(activity), "botactivity%i / %i\0", currentPlayers, maxPlayers);
+	SocketSend(datsocket, activity, sizeof(activity));
+
+	char topic[1000];
+	Format(topic, sizeof(topic), "channeltopic000000000000000000Server name: \"%s\" Online players: %i/%i Server Uptime: %s IP: %s:%s\0", serverName, currentPlayers, maxPlayers, GetUptime(), serverIP, serverPort);
+	SocketSend(datsocket, topic, sizeof(topic));
+
 	disconnected = false;
 	return Plugin_Continue;
+}
+
+public Action DiscordAnnouncement(Handle timer)
+{
+	char message[1000];
+	convar_announcement.GetString(message, sizeof(message));
+	char link[64];
+	convar_announcement_link.GetString(link, sizeof(link));
+	PrintToChatAll(message);
+	PrintToChatAll(link);
 }
 
 ///////////////////////////////////////
@@ -141,8 +178,12 @@ public OnPluginStart()
 	PrintToServer("Dyscord plugin activated.");
 
 	// Registering ConVars
-	convar_ip = CreateConVar("discord_bot_ip", "127.0.0.1", "The ip of the bot application.");
-	convar_port = CreateConVar("discord_bot_port", "8888", "The ip of the bot application.");
+	convar_server_ip = CreateConVar("dyscord_server_ip", "Set this in the Dyscord config", "The global IP of this server. Used in game invite links in Discord.");
+	convar_bot_ip = CreateConVar("dyscord_bot_ip", "127.0.0.1", "The ip of the bot application.");
+	convar_bot_port = CreateConVar("dyscord_bot_port", "8888", "The ip of the bot application.");
+	convar_announcement = CreateConVar("dyscord_announcement", "Join the Discord server!", "A short message to go before a link to the Discord server (Max 1000 chars).");
+	convar_announcement_link = CreateConVar("dyscord_announcement_link", "Tell your admin to put a link here!", "Link to the Discord server.");
+	convar_announcement_rate = CreateConVar("dyscord_announcement_rate", "1200.0", "How often the announcement is sent in seconds.");
 	AutoExecConfig(true, "dyscord");
 }
 
@@ -150,18 +191,29 @@ public OnConfigsExecuted()
 {
 	if(firstTimeSteup)
 	{
-		convar_ip = FindConVar("discord_bot_ip");
-		convar_port = FindConVar("discord_bot_port");
+		convar_hostname = FindConVar("hostname");
+		convar_hostname.GetString(serverName, sizeof(serverName));
+		convar_server_ip = FindConVar("dyscord_server_ip");
+		convar_server_ip.GetString(serverIP, sizeof(serverIP));
+		convar_server_port = FindConVar("hostport");
+		convar_server_port.GetString(serverPort, sizeof(serverPort));
+		convar_bot_ip = FindConVar("dyscord_bot_ip");
+		convar_bot_port = FindConVar("dyscord_bot_port");
+		convar_announcement = FindConVar("dyscord_announcement");
+		convar_announcement_link = FindConVar("dyscord_announcement_link");
+		convar_announcement_rate = FindConVar("dyscord_announcement_rate");
+
 		// Connecting TCP socket
 		datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
 
-		char ip[64];
-		convar_ip.GetString(ip, sizeof(ip));
-		SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_port.IntValue);
-		PrintToServer("Connecting to Discord Bot. IP: %s Port: %i", ip, convar_port.IntValue);
+		char botIP[64];
+		convar_bot_ip.GetString(botIP, sizeof(botIP));
+		SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, botIP, convar_bot_port.IntValue);
+		PrintToServer("Connecting to Discord Bot. IP: %s Port: %i", botIP, convar_bot_port.IntValue);
 
 		// Set automated events
-		CreateTimer(5.0, UpdateActivity, _, TIMER_REPEAT);
+		CreateTimer(10.0, UpdateStatus, _, TIMER_REPEAT);
+		CreateTimer(convar_announcement_rate.FloatValue, DiscordAnnouncement, _, TIMER_REPEAT);
 
 		// Hook game events
 		HookEvent("player_death", OnPlayerDeath);
@@ -266,11 +318,8 @@ public void OnPlayerTeam(Event event, const char[] name, bool dontBroadcast)
 
 public void OnRoundRestart(Event event, const char[] name, bool dontBroadcast)
 {
-	char team[64];
-	GetTeamName(event.GetInt("winner"), team, sizeof(team));
-
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000**%s won the game.**\0", team);
+	Format(message, sizeof(message), "000000000000000000**%s Round has started.**\0");
 	SocketSend(datsocket, message, sizeof(message));
 }
 
@@ -345,6 +394,7 @@ public void OnClientDisconnect(int client)
 	Format(message, sizeof(message), "000000000000000000**%s [U:1:%i] left the game.**\0", name, steamid);
 	SocketSend(datsocket, message, sizeof(message));
 }
+
 public OnPluginEnd()
 {
 	SocketDisconnect(datsocket);
@@ -361,8 +411,8 @@ public Action CommandReconnect(int client, int args)
 
 	datsocket = SocketCreate(SOCKET_TCP, OnSocketError);
 	char ip[64];
-	convar_ip.GetString(ip, sizeof(ip));
-	SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_port.IntValue);
+	convar_bot_ip.GetString(ip, sizeof(ip));
+	SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_bot_port.IntValue);
 	return Plugin_Handled;
 }
 
@@ -408,7 +458,7 @@ public OnSocketError(Handle:socket, const errorType, const errorNum, any:hFile)
 	CloseHandle(socket);
 
 	char ip[64];
-	convar_ip.GetString(ip, sizeof(ip));
-	SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_port.IntValue);
+	convar_bot_ip.GetString(ip, sizeof(ip));
+	SocketConnect(datsocket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, ip, convar_bot_port.IntValue);
 }
 ////////////////////////////////////////
