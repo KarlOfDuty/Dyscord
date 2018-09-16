@@ -62,6 +62,10 @@ char[] WeaponTagToName(const char[] tag)
 	{
 		output = "Machine Pistol";
 	}
+	else if(StrEqual("Crowbar", tag, false))
+	{
+		output = "Light Katana";
+	}
 	else if(StrEqual("Player", tag, false))
 	{
 		output = "K";
@@ -181,7 +185,7 @@ public OnPluginStart()
 	convar_server_ip = CreateConVar("dyscord_server_ip", "Set this in the Dyscord config", "The global IP of this server. Used in game invite links in Discord.");
 	convar_bot_ip = CreateConVar("dyscord_bot_ip", "127.0.0.1", "The ip of the bot application.");
 	convar_bot_port = CreateConVar("dyscord_bot_port", "8888", "The ip of the bot application.");
-	convar_announcement = CreateConVar("dyscord_announcement", "Join the Discord server!", "A short message to go before a link to the Discord server (Max 1000 chars).");
+	convar_announcement = CreateConVar("dyscord_announcement", "Join the Discord server!", "A short message to go before a link to the Discord server.");
 	convar_announcement_link = CreateConVar("dyscord_announcement_link", "Tell your admin to put a link here!", "Link to the Discord server.");
 	convar_announcement_rate = CreateConVar("dyscord_announcement_rate", "1200.0", "How often the announcement is sent in seconds.");
 	AutoExecConfig(true, "dyscord");
@@ -292,7 +296,7 @@ public void OnPlayerTeam(Event event, const char[] name, bool dontBroadcast)
 
 	if(StrEqual(oldTeam, "Unassigned", false) || StrEqual(team, "Unassigned", false))
 	{
-		return
+		return;
 	}
 
 	int playerSteamID = GetSteamAccountID(playerClient, true);
