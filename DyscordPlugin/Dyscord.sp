@@ -307,6 +307,11 @@ public void OnObjective(Event event, const char[] name, bool dontBroadcast)
 ///////////////////////////////////////
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
 {
+	if(StrEqual("say_team", command))
+	{
+		return;
+	}
+
 	char name[128];
 	GetClientName(client, name, sizeof(name));
 
@@ -347,7 +352,7 @@ public OnPluginEnd()
 }
 ///////////////////////////////////////
 //                                   //
-//          Socket events            //
+//             Commands              //
 //                                   //
 ///////////////////////////////////////
 public Action CommandReconnect(int client, int args)
