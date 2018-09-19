@@ -349,7 +349,7 @@ public void OnObjective(Event event, const char[] name, bool dontBroadcast)
 	event.GetString("objective", objective, sizeof(objective));
 
 	char message[1000];
-	Format(message, sizeof(message), "000000000000000000**The objcetive \"%s\" has been captured by %s [U:1:%i]**\0", objective, playerName, playerSteamID);
+	Format(message, sizeof(message), "000000000000000000**The objective \"%s\" has been captured by %s [U:1:%i]**\0", objective, playerName, playerSteamID);
 	SocketSend(datsocket, message, sizeof(message));
 }
 
