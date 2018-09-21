@@ -158,7 +158,9 @@ listenServer.createServer(function (socket)
                     if (cutMessage != null && cutMessage !== " " && cutMessage !== "")
                     {
                         if (client.status)
-                        verifiedChannel.send(cutMessage);
+                        {
+                            verifiedChannel.send(cutMessage);
+                        }
                         if (verbose)
                         {
                             console.log("Sent: " + channelID + ": \"" + cutMessage + "\" to Discord.");
