@@ -12,8 +12,33 @@ var messageQueue = JSON.parse("{}");
 
 var connectedToDiscord = false;
 
+function command(socket, message, client)
+{
+    //Cut message into base command and arguments
+    const args = message.content.slice(prefix.length).split(/ +/);
+    const command = args.shift().toLowerCase();
+
+    //Add commands here, I only verify permissions and that the command exists here
+    if (command === "setavatar" && (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false))
+    {
+        var url = args.shift();
+        client.user.setAvatar(url);
+        message.channel.send("Avatar Updated.");
+    }
+    else if (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false)
+    {
+        //Sends the command on to the server.
+        socket.write("command " + message.content.slice(prefix.length) + "\n");
+    }
+    else
+    {
+        message.channel.send("You do not have permission to do that.");
+    }
+}
+
 console.log("Binding TCP port...");
 var listenServer = require("net");
+
 listenServer.createServer(function (socket)
 {
     socket.setEncoding("utf8");
@@ -238,31 +263,6 @@ listenServer.createServer(function (socket)
 {
     console.log("Server is listening on port " + listeningPort);
 }
-
-function command(socket, message, client)
-{
-    //Cut message into base command and arguments
-    const args = message.content.slice(prefix.length).split(/ +/);
-    const command = args.shift().toLowerCase();
-
-    //Add commands here, I only verify permissions and that the command exists here
-    if (command === "setavatar" && (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false))
-    {
-        var url = args.shift();
-        client.user.setAvatar(url);
-        message.channel.send("Avatar Updated.");
-    }
-    else if (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false)
-    {
-        //Sends the command on to the server.
-        socket.write("command " + message.content.slice(prefix.length) + "\n");
-    }
-    else
-    {
-        message.channel.send("You do not have permission to do that.");
-    }
-}
-
 console.log("Connecting to Discord...");
 client.on("ready", () =>
 {
