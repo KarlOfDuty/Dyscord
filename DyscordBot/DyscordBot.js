@@ -1,27 +1,27 @@
-console.log('Config loading...');
+console.log("Config loading...");
 
-const { token, prefix, listeningPort, defaultChannel, verbose, cooldown, requirepermission } = require('./config.json');
+const { token, prefix, listeningPort, defaultChannel, verbose, cooldown, requirepermission } = require("./config.json");
 
-console.log('Config loaded.');
+console.log("Config loaded.");
 
-const Discord = require('discord.js');
+const Discord = require("discord.js");
 
 const client = new Discord.Client({ autoReconnect: true });
 
-var messageQueue = JSON.parse('{}');
+var messageQueue = JSON.parse("{}");
 
 var connectedToDiscord = false;
 
-console.log('Binding TCP port...');
-var listenServer = require('net');
+console.log("Binding TCP port...");
+var listenServer = require("net");
 listenServer.createServer(function (socket)
 {
     socket.setEncoding("utf8");
 
-    console.log('Plugin connected.');
+    console.log("Plugin connected.");
 
     // Messages from the plugin
-    socket.on('data', function (data)
+    socket.on("data", function (data)
     {
         if (client == null)
         {
@@ -34,7 +34,7 @@ listenServer.createServer(function (socket)
             console.log("Recieved " + data + " but was not connected to Discord yet.");
             return;
         }
-        var messages = data.split('\u0000');
+        var messages = data.split("\u0000");
 
         messages.forEach(function (packet)
         {
@@ -53,37 +53,45 @@ listenServer.createServer(function (socket)
                     if (verifiedChannel.manageable)
                     {
                         if (verbose)
-                            console.log("Changed to topic: " + packet.slice(30));
+                        {
+                            console.log("Changed to topic: " + packet.slice(30));                            
+                        }
                         verifiedChannel.setTopic(packet.slice(30));
                     }
                     else
                     {
                         if(verbose)
+                        {
                             console.warn("No permission to change channel topic.");
+                        }
                     }
                 }
                 else
                 {
                     if(verbose)
-                        console.warn("Server status channel was not found.");
+                    {
+                        console.warn("Server status channel was not found.");                        
+                    }
                 }
             }
             else if (packet.slice(0, 11) === "botactivity" && client.user != null)
             {
                 if (packet.slice(11)[0] === "0")
                 {
-                    client.user.setStatus('idle');
+                    client.user.setStatus("idle");
                 }
                 else
                 {
-                    client.user.setStatus('available');
+                    client.user.setStatus("available");
                 }
                 client.user.setActivity(packet.slice(11),
                 {
                     type: "PLAYING"
                 });
                 if (verbose)
-                    console.warn("Set activity to " + packet.slice(11));
+                {
+                    console.warn("Set activity to " + packet.slice(11));                    
+                }
             }
             else
             {
@@ -114,7 +122,7 @@ listenServer.createServer(function (socket)
             var verifiedChannel = client.channels.get(channelID);
             if (verifiedChannel != null)
             {
-                //Message is copied to a new variable as it's deletion later may happen before the send function finishes
+                //Message is copied to a new variable as it"s deletion later may happen before the send function finishes
                 var message = messageQueue[channelID].slice(0, -1);
 
                 // If message is too long, split it up
@@ -128,7 +136,7 @@ listenServer.createServer(function (socket)
                         verifiedChannel.send(cutMessage);
                         if (verbose)
                         {
-                            console.log("Sent: " + channelID + ": '" + cutMessage + "' to Discord.");
+                            console.log("Sent: " + channelID + ": \"" + cutMessage + "\" to Discord.");
                         }
                     }
                 }
@@ -136,11 +144,10 @@ listenServer.createServer(function (socket)
                 // Send remaining message
                 if (message != null && message !== " " && message !== "")
                 {
-
                     verifiedChannel.send(message);
                     if (verbose)
                     {
-                        console.log("Sent: " + channelID + ": '" + message + "' to Discord.");
+                        console.log("Sent: " + channelID + ": \"" + message + "\" to Discord.");
                     }
                 }
             }
@@ -160,7 +167,7 @@ listenServer.createServer(function (socket)
     });
 
     //Connection issues
-    socket.on('error', function (data)
+    socket.on("error", function (data)
     {
         if (data.message === "read ECONNRESET")
         {
@@ -169,7 +176,7 @@ listenServer.createServer(function (socket)
             if (verifiedChannel != null)
             {
                 verifiedChannel.send("```diff\n- Dystopia connection lost.```");
-                client.user.setStatus('dnd');
+                client.user.setStatus("dnd");
                 client.user.setActivity("for server startup.",
                 {
                     type: "WATCHING"
@@ -178,7 +185,9 @@ listenServer.createServer(function (socket)
             else
             {
                 if (verbose)
-                    console.warn("Error sending status to Discord.");
+                {
+                    console.warn("Error sending status to Discord.");                    
+                }
             }
         }
         else if (verbose === true)
@@ -188,7 +197,7 @@ listenServer.createServer(function (socket)
     });
 
     //Messages from Discord
-    client.on('message', message =>
+    client.on("message", (message) =>
     {
         if(message.author.bot || message.channel.id !== defaultChannel || !/[a-z]/i.test(message.content))
         {
@@ -227,7 +236,7 @@ listenServer.createServer(function (socket)
     });
 }).listen(listeningPort);
 {
-    console.log('Server is listening on port ' + listeningPort);
+    console.log("Server is listening on port " + listeningPort);
 }
 
 function command(socket, message, client)
@@ -237,11 +246,11 @@ function command(socket, message, client)
     const command = args.shift().toLowerCase();
 
     //Add commands here, I only verify permissions and that the command exists here
-    if (command === 'setavatar' && (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false))
+    if (command === "setavatar" && (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false))
     {
         var url = args.shift();
         client.user.setAvatar(url);
-        message.channel.send('Avatar Updated.');
+        message.channel.send("Avatar Updated.");
     }
     else if (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false)
     {
@@ -250,7 +259,7 @@ function command(socket, message, client)
     }
     else
     {
-        message.channel.send('You do not have permission to do that.');
+        message.channel.send("You do not have permission to do that.");
     }
 }
 
