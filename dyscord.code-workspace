@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"sourcepawnLanguageServer.sourcemod_home": "c:/Users/Karl/Desktop/Git Repos/Dyscord/DyscordPlugin/include"
+	}
+}
