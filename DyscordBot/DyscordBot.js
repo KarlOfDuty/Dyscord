@@ -62,7 +62,7 @@ function setChannelTopic(channelID, topic)
 }
 
 // TCP server events /////////////////////////////
-tcpServer.on('connection', (socket) =>
+tcpServer.on("connection", (socket) =>
 {
     sockets.push(socket);
 
@@ -222,7 +222,7 @@ tcpServer.on('connection', (socket) =>
             console.log("Socket error <" + data.message + ">");
         }
     });
-})
+});
 
 console.log("Binding TCP port...");
 tcpServer.listen(listeningPort, () =>
@@ -260,7 +260,10 @@ discordClient.on("message", (message) =>
     }
     else
     {
-        socket.write("message[Discord] " + message.author.username + ": " + message.content + "\n");
+        sockets.forEach((socket) =>
+        {
+            socket.write("message[Discord] " + message.author.username + ": " + message.content + "\n");
+        });
     }
 });
 
@@ -308,7 +311,7 @@ function shutdown()
 
     tcpServer.close(() =>
     {
-        console.log('TCP server closed.');
+        console.log("TCP server closed.");
         tcpServer.unref();
     });
 
@@ -328,5 +331,5 @@ function shutdown()
 process.on("exit", () => shutdown());
 process.on("SIGINT", () => shutdown());
 process.on("SIGUSR1", () => shutdown());
-process.on("SIGUSR2", () =>shutdown());
+process.on("SIGUSR2", () => shutdown());
 process.on("SIGHUP", () => shutdown());
