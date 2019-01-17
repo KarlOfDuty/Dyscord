@@ -7,7 +7,7 @@ public Plugin myinfo =
 	name = "Dyscord",
 	author = "KarlOfDuty",
 	description = "This plugin bridges a Discord chat and the Dystopia in-game chat.",
-	version = "0.1.1",
+	version = "0.2.0",
 	url = "https://karlofduty.com"
 };
 
@@ -182,7 +182,7 @@ public OnPluginStart()
 	PrintToServer("Dyscord plugin activated.");
 
 	// Registering ConVars
-	convar_server_ip = CreateConVar("dyscord_server_ip", "Set this in the Dyscord config", "The global IP of this server. Used in game invite links in Discord.");
+	convar_server_ip = CreateConVar("dyscord_server_ip", "Set this in the Dyscord config", "The global IP of this server. Used in the join command in Discord to generate the join link.");
 	convar_bot_ip = CreateConVar("dyscord_bot_ip", "127.0.0.1", "The ip of the bot application.");
 	convar_bot_port = CreateConVar("dyscord_bot_port", "8888", "The ip of the bot application.");
 	convar_announcement = CreateConVar("dyscord_announcement", "Join the Discord server!", "A short message to go before a link to the Discord server.");
@@ -437,8 +437,17 @@ public OnSocketReceive(Handle:socket, String:receiveData[], const dataSize, any:
 	if(StartsWith(receiveData, strlen(receiveData), "command", 7))
 	{
 		strcopy(receiveData, strlen(receiveData), receiveData[7]);
-		ServerCommand(receiveData);
-		PrintToServer(receiveData);
+		if(StartsWith(receiveData, strlen(receiveData), "join", 4))
+		{
+			char message[1000];
+			Format(message, sizeof(message), "000000000000000000**Click here to join the game: steam://connect/%s:%s**\0", serverIP, serverPort);
+			SocketSend(datsocket, message, sizeof(message));
+		}
+		else
+		{
+			ServerCommand(receiveData);
+			PrintToServer(receiveData);
+		}
 	}
 	else if(StartsWith(receiveData, strlen(receiveData), "message", 7))
 	{

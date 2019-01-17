@@ -26,6 +26,10 @@ function command(socket, message, client)
         client.user.setAvatar(url);
         message.channel.send("Avatar Updated.");
     }
+    else if (command === "join")
+    {
+        socket.write("commandjoin\n");
+    }
     else if (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false)
     {
         //Sends the command on to the server.
