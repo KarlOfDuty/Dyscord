@@ -4,3 +4,5 @@ DyscordBot/obj/Debug/
 DyscordBot/config\.json
 
 DyscordBot/node_modules/
+
+DyscordBot/.idea

@@ -2,7 +2,7 @@
   "name": "Dyscord",
   "version": "0.2.0",
   "description": "Dyscord, a Dystopia - Discord bridge",
-  "main": "DiscordBot.js",
+  "main": "DyscordBot.js",
   "homepage": "https://www.karlofduty.com",
   "license": "GPL-3.0-or-later",
   "private": true,
@@ -18,6 +18,6 @@
     "url": "https://github.com/KarlOfDuty/Dyscord"
   },
   "dependencies": {
-    "discord.js": "^11.4.2"
+    "discord.js": "*"
   }
 }

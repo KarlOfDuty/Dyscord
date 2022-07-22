@@ -3,8 +3,27 @@ const { token, prefix, listeningPort, defaultChannel, verbose, cooldown, require
 console.log("Config loaded.");
 
 var connectedToDiscord = false;
-const Discord = require("discord.js");
-const discordClient = new Discord.Client({ autoReconnect: true });
+const { Client, GatewayIntentBits } = require("discord.js");
+
+const discordClient = new Client({ intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildBans,
+    GatewayIntentBits.GuildEmojisAndStickers,
+    GatewayIntentBits.GuildIntegrations,
+    GatewayIntentBits.GuildWebhooks,
+    GatewayIntentBits.GuildInvites,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildMessageTyping,
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.DirectMessageReactions,
+    GatewayIntentBits.DirectMessageTyping,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildScheduledEvents
+    ] });
 
 var messageQueue = JSON.parse("{}");
 
@@ -43,7 +62,7 @@ function command(socket, message, client)
 
 function setChannelTopic(channelID, topic)
 {
-    var verifiedChannel = discordClient.channels.get(channelID);
+    var verifiedChannel = discordClient.channels.cache.get(channelID);
     if (verifiedChannel != null)
     {
         if (verifiedChannel.manageable)
@@ -148,7 +167,7 @@ tcpServer.on("connection", (socket) =>
         });
         for (var channelID in messageQueue)
         {
-            var verifiedChannel = discordClient.channels.get(channelID);
+            var verifiedChannel = discordClient.channels.cache.get(channelID);
             if (verifiedChannel != null)
             {
                 //Message is copied to a new variable as it"s deletion later may happen before the send function finishes
@@ -173,7 +192,7 @@ tcpServer.on("connection", (socket) =>
                 }
 
                 // Send remaining message
-                if (message != null && message !== " " && message !== "")
+                if (message !== " " && message !== "")
                 {
                     verifiedChannel.send(message);
                     if (verbose)
@@ -203,7 +222,7 @@ tcpServer.on("connection", (socket) =>
         if (data.message === "read ECONNRESET")
         {
             console.log("Plugin connection lost.");
-            var verifiedChannel = discordClient.channels.get(defaultChannel);
+            var verifiedChannel = discordClient.channels.cache.get(defaultChannel);
             if (verifiedChannel != null)
             {
                 verifiedChannel.send("```diff\n- Dystopia connection lost.```");
@@ -239,7 +258,7 @@ tcpServer.listen(listeningPort, () =>
 discordClient.on("ready", () =>
 {
     console.log("Discord connection established.");
-    discordClient.channels.get(defaultChannel).send("```diff\n+ Bot Online.```");
+    discordClient.channels.cache.get(defaultChannel).send("```diff\n+ Bot Online.```");
     discordClient.user.setStatus("dnd");
     discordClient.user.setActivity("for server startup.",
     {
@@ -321,7 +340,7 @@ function shutdown()
 
     if (connectedToDiscord)
     {
-        discordClient.channels.get(defaultChannel).send("```diff\n- Bot shutting down...```");
+        discordClient.channels.cache.get(defaultChannel).send("```diff\n- Bot shutting down...```");
         console.log("Signing out of Discord...");
         discordClient.user.setStatus("dnd");
         discordClient.user.setActivity("for server startup.",
