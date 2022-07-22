@@ -1,2 +1,0 @@
-node DyscordBot.js
-PAUSE
