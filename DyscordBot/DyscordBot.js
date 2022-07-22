@@ -3,7 +3,7 @@ const { token, prefix, listeningPort, defaultChannel, verbose, cooldown, require
 console.log("Config loaded.");
 
 var connectedToDiscord = false;
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, ActivityType } = require("discord.js");
 
 const discordClient = new Client({ intents: [
     GatewayIntentBits.Guilds,
@@ -134,11 +134,11 @@ tcpServer.on("connection", (socket) =>
                 }
                 discordClient.user.setActivity(packet.slice(11),
                 {
-                    type: "PLAYING"
+                    type: ActivityType.Playing
                 });
                 if (verbose)
                 {
-                    console.warn("Set activity to " + packet.slice(11));                    
+                    console.log("Set activity to " + packet.slice(11));
                 }
             }
             else
