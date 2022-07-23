@@ -3,7 +3,7 @@ const { token, prefix, listeningPort, defaultChannel, verbose, cooldown, require
 console.log("Config loaded.");
 
 var connectedToDiscord = false;
-const { Client, GatewayIntentBits, ActivityType } = require("discord.js");
+const { Client, GatewayIntentBits, ActivityType, PermissionsBitField } = require("discord.js");
 
 const discordClient = new Client({ intents: [
     GatewayIntentBits.Guilds,
@@ -44,7 +44,7 @@ function command(socket, message, client)
     const command = args.shift().toLowerCase();
 
     //Add commands here, I only verify permissions and that the command exists here
-    if (command === "setavatar" && (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false))
+    if (command === "setavatar" && (message.member.permissions.has(PermissionsBitField.Administrator) || requirepermission === false))
     {
         var url = args.shift();
         client.user.setAvatar(url);
@@ -54,7 +54,7 @@ function command(socket, message, client)
     {
         socket.write("commandjoin\n");
     }
-    else if (message.member.hasPermission("ADMINISTRATOR") || requirepermission === false)
+    else if (message.member.permissions.has(PermissionsBitField.Administrator) || requirepermission === false)
     {
         //Sends the command on to the server.
         socket.write("command " + message.content.slice(prefix.length) + "\n");
