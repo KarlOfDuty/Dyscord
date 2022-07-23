@@ -223,13 +223,13 @@ tcpServer.on("connection", (socket) =>
         {
             console.log("Plugin connection lost.");
             var verifiedChannel = discordClient.channels.cache.get(defaultChannel);
-            if (verifiedChannel != null)
+            if (verifiedChannel != null && connectedToDiscord)
             {
                 verifiedChannel.send("```diff\n- Dystopia connection lost.```");
                 discordClient.user.setStatus("dnd");
                 discordClient.user.setActivity("for server startup.",
                 {
-                    type: "WATCHING"
+                    type: ActivityType.Watching
                 });
             }
             else
@@ -262,7 +262,7 @@ discordClient.on("ready", () =>
     discordClient.user.setStatus("dnd");
     discordClient.user.setActivity("for server startup.",
     {
-        type: "WATCHING"
+        type: ActivityType.Watching
     });
     connectedToDiscord = true;
 });
@@ -325,7 +325,7 @@ discordClient.login(token).then().catch((e) =>
 });
 
 // Shutdown events //////////////////////
-function shutdown()
+function shutdown(exitCode)
 {
     sockets.forEach((socket) =>
     {
@@ -342,17 +342,25 @@ function shutdown()
     {
         discordClient.channels.cache.get(defaultChannel).send("```diff\n- Bot shutting down...```");
         console.log("Signing out of Discord...");
-        discordClient.user.setStatus("dnd");
+        discordClient.user.setStatus("invisible");
         discordClient.user.setActivity("for server startup.",
         {
-            type: "WATCHING"
+            type: ActivityType.Watching
         });
     }
+
+    connectedToDiscord = false;
     discordClient.destroy();
+    process.exit(exitCode);
 }
 
-process.on("exit", () => shutdown());
-process.on("SIGINT", () => shutdown());
-process.on("SIGUSR1", () => shutdown());
-process.on("SIGUSR2", () => shutdown());
-process.on("SIGHUP", () => shutdown());
+process.on("exit", () => shutdown(0));
+process.on("SIGINT", () => shutdown(0));
+process.on("SIGUSR1", () => shutdown(2));
+process.on("SIGUSR2", () => shutdown(2));
+process.on("SIGHUP", () => shutdown(2));
+process.on('uncaughtException', function(e) {
+    console.log('Uncaught Exception...');
+    console.log(e.stack);
+    process.exit(99);
+});
