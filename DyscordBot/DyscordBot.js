@@ -34,6 +34,11 @@ var tcpServer = require("net").createServer();
 // Functions ////////////////////////////////////
 function command(socket, message, client)
 {
+    if(verbose)
+    {
+        console.log("Command received: " + message.content)
+    }
+
     //Cut message into base command and arguments
     const args = message.content.slice(prefix.length).split(/ +/);
     const command = args.shift().toLowerCase();
@@ -267,7 +272,7 @@ discordClient.on("ready", () =>
     connectedToDiscord = true;
 });
 
-discordClient.on("message", (message) =>
+discordClient.on("messageCreate", async (message) =>
 {
     if(message.author.bot || message.channel.id !== defaultChannel || !/[a-z]/i.test(message.content))
     {
